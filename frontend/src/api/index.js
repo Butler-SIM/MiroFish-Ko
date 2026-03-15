@@ -2,7 +2,9 @@ import axios from 'axios'
 
 // axios 인스턴스 생성
 const service = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001',
+  // Same-origin by default so local dev can use the Vite proxy and production can
+  // serve both SPA and API from a single Railway service.
+  baseURL: import.meta.env.VITE_API_BASE_URL || '',
   timeout: 300000, // 5분 타임아웃(온톨로지 생성은 시간이 오래 걸릴 수 있음)
   headers: {
     'Content-Type': 'application/json'

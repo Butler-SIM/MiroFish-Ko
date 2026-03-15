@@ -4,12 +4,13 @@ MiroFish Backend - Flask 애플리케이션 팩토리
 
 import os
 import warnings
+from pathlib import Path
 
 # `multiprocessing resource_tracker` 경고 억제(transformers 등 서드파티 라이브러리에서 발생)
 # 다른 import보다 먼저 설정해야 함
 warnings.filterwarnings("ignore", message=".*resource_tracker.*")
 
-from flask import Flask, request
+from flask import Flask, request, send_from_directory
 from flask_cors import CORS
 
 from .config import Config
@@ -18,7 +19,9 @@ from .utils.logger import setup_logger, get_logger
 
 def create_app(config_class=Config):
     """Flask 애플리케이션 팩토리 함수"""
-    app = Flask(__name__)
+    frontend_dist = Path(__file__).resolve().parents[2] / "frontend" / "dist"
+    static_folder = str(frontend_dist) if frontend_dist.exists() else None
+    app = Flask(__name__, static_folder=static_folder, static_url_path="")
     app.config.from_object(config_class)
     
     # JSON 인코딩 설정: 문자를 `\uXXXX` 형태가 아닌 원문으로 반환
@@ -72,6 +75,23 @@ def create_app(config_class=Config):
     @app.route('/health')
     def health():
         return {'status': 'ok', 'service': 'MiroFish Backend'}
+
+    @app.route('/', defaults={'path': ''})
+    @app.route('/<path:path>')
+    def serve_frontend(path: str):
+        """Serve the built SPA when present, falling back to index.html."""
+        if not app.static_folder:
+            return {'status': 'ok', 'service': 'MiroFish Backend', 'frontend': 'not_built'}
+
+        requested_path = Path(app.static_folder) / path
+        if path and requested_path.is_file():
+            return send_from_directory(app.static_folder, path)
+
+        index_file = Path(app.static_folder) / 'index.html'
+        if index_file.exists():
+            return send_from_directory(app.static_folder, 'index.html')
+
+        return {'status': 'ok', 'service': 'MiroFish Backend', 'frontend': 'missing_index'}
     
     if should_log_startup:
         logger.info("MiroFish Backend 시작 완료")

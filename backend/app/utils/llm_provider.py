@@ -14,6 +14,7 @@ import shutil
 import subprocess
 import tempfile
 import time
+import threading
 import uuid
 from pathlib import Path
 from types import SimpleNamespace
@@ -35,6 +36,7 @@ SUPPORTED_LLM_PROVIDERS = {
 }
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
+_CODEX_EXEC_LOCK = threading.Lock()
 
 _TEXT_RESPONSE_SCHEMA = {
     "type": "object",
@@ -254,17 +256,20 @@ class CodexCLIClient:
             env = os.environ.copy()
             env.setdefault("NO_COLOR", "1")
 
-            completed = subprocess.run(
-                command,
-                input=prompt,
-                text=True,
-                capture_output=True,
-                cwd=str(self.working_dir),
-                env=env,
-                encoding="utf-8",
-                timeout=self.timeout_seconds,
-                check=False,
-            )
+            # ChatGPT-managed auth persists in a shared auth.json file.
+            # Serializing Codex executions avoids concurrent refresh/write races.
+            with _CODEX_EXEC_LOCK:
+                completed = subprocess.run(
+                    command,
+                    input=prompt,
+                    text=True,
+                    capture_output=True,
+                    cwd=str(self.working_dir),
+                    env=env,
+                    encoding="utf-8",
+                    timeout=self.timeout_seconds,
+                    check=False,
+                )
             if completed.returncode != 0:
                 raise CodexCLIError(
                     "codex exec failed: "
