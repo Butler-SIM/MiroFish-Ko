@@ -117,9 +117,16 @@ cp .env.example .env
 # LLM API 설정 (OpenAI SDK 형식을 따르는 LLM API 지원)
 # 권장: BaiLian 플랫폼의 Alibaba Qwen-plus 모델: https://bailian.console.aliyun.com/
 # 비용 소모가 큰 편이므로 처음에는 40라운드 미만으로 시뮬레이션 권장
+LLM_PROVIDER=openai_compatible
 LLM_API_KEY=your_api_key
 LLM_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
 LLM_MODEL_NAME=qwen-plus
+# Codex CLI 모드 예시
+# LLM_PROVIDER=codex_cli
+# LLM_CODEX_EXECUTABLE=codex
+# LLM_CODEX_SANDBOX=read-only
+# LLM_CODEX_WORKDIR=
+# LLM_CODEX_TIMEOUT_SECONDS=180
 
 # Zep Cloud 설정
 # 월 무료 할당량으로도 기본 사용 가능: https://app.getzep.com/

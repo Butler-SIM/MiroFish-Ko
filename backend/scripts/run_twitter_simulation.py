@@ -114,8 +114,6 @@ def setup_oasis_logging(log_dir: str):
 
 
 try:
-    from camel.models import ModelFactory
-    from camel.types import ModelPlatformType
     import oasis
     from oasis import (
         ActionType,
@@ -123,6 +121,7 @@ try:
         ManualAction,
         generate_twitter_agent_graph
     )
+    from app.utils.llm_provider import create_camel_model_backend
 except ImportError as e:
     print(f"오류: 누락 {e}")
     print(": pip install oasis-ai camel-ai")
@@ -432,6 +431,7 @@ class TwitterSimulationRunner:
         - LLM_MODEL_NAME: 
         """
         #  .env 읽기설정
+        provider = os.environ.get("LLM_PROVIDER", "openai_compatible").strip().lower()
         llm_api_key = os.environ.get("LLM_API_KEY", "")
         llm_base_url = os.environ.get("LLM_BASE_URL", "")
         llm_model = os.environ.get("LLM_MODEL_NAME", "")
@@ -439,6 +439,17 @@ class TwitterSimulationRunner:
         #  .env 진행 중 config 
         if not llm_model:
             llm_model = self.config.get("llm_model", "gpt-4o-mini")
+
+        print(
+            f"LLM?ㅼ젙: provider={provider}, model={llm_model}, "
+            f"base_url={llm_base_url[:40] if llm_base_url else ''}..."
+        )
+        return create_camel_model_backend(
+            provider=provider,
+            model_name=llm_model,
+            api_key=llm_api_key or None,
+            base_url=llm_base_url or None,
+        )
         
         #  camel-ai 
         if llm_api_key:

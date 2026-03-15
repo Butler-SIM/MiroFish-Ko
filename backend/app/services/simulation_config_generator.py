@@ -19,10 +19,9 @@ from typing import Dict, Any, List, Optional, Callable
 from dataclasses import dataclass, field, asdict
 from datetime import datetime
 
-from openai import OpenAI
-
 from ..config import Config
 from ..utils.logger import get_logger
+from ..utils.llm_provider import create_openai_compatible_client
 from .zep_entity_reader import EntityNode, ZepEntityReader
 
 logger = get_logger('mirofish.simulation_config')
@@ -229,16 +228,19 @@ class SimulationConfigGenerator:
         base_url: Optional[str] = None,
         model_name: Optional[str] = None
     ):
-        self.api_key = api_key or Config.LLM_API_KEY
+        self.api_key = api_key or Config.LLM_API_KEY or (
+            "codex-cli" if Config.LLM_PROVIDER == "codex_cli" else None
+        )
         self.base_url = base_url or Config.LLM_BASE_URL
         self.model_name = model_name or Config.LLM_MODEL_NAME
         
         if not self.api_key:
             raise ValueError("LLM_API_KEY 설정")
         
-        self.client = OpenAI(
-            api_key=self.api_key,
-            base_url=self.base_url
+        self.client = create_openai_compatible_client(
+            model_name=self.model_name,
+            api_key=api_key,
+            base_url=base_url,
         )
     
     def generate_config(

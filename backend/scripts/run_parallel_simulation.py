@@ -154,8 +154,6 @@ def init_logging_for_simulation(simulation_dir: str):
 from action_logger import SimulationLogManager, PlatformActionLogger
 
 try:
-    from camel.models import ModelFactory
-    from camel.types import ModelPlatformType
     import oasis
     from oasis import (
         ActionType,
@@ -164,6 +162,7 @@ try:
         generate_twitter_agent_graph,
         generate_reddit_agent_graph
     )
+    from app.utils.llm_provider import create_camel_model_backend
 except ImportError as e:
     print(f"오류: 누락 {e}")
     print(": pip install oasis-ai camel-ai")
@@ -995,17 +994,20 @@ def create_model(config: Dict[str, Any], use_boost: bool = False):
     boost_api_key = os.environ.get("LLM_BOOST_API_KEY", "")
     boost_base_url = os.environ.get("LLM_BOOST_BASE_URL", "")
     boost_model = os.environ.get("LLM_BOOST_MODEL_NAME", "")
+    default_provider = os.environ.get("LLM_PROVIDER", "openai_compatible").strip().lower()
     has_boost_config = bool(boost_api_key)
     
     # 파라미터설정선정 LLM
     if use_boost and has_boost_config:
         # 설정
+        provider = os.environ.get("LLM_BOOST_PROVIDER", default_provider).strip().lower()
         llm_api_key = boost_api_key
         llm_base_url = boost_base_url
         llm_model = boost_model or os.environ.get("LLM_MODEL_NAME", "")
-        config_label = "[LLM]"
+        config_label = "[LLM BOOST]"
     else:
         # 설정
+        provider = default_provider
         llm_api_key = os.environ.get("LLM_API_KEY", "")
         llm_base_url = os.environ.get("LLM_BASE_URL", "")
         llm_model = os.environ.get("LLM_MODEL_NAME", "")
@@ -1014,6 +1016,17 @@ def create_model(config: Dict[str, Any], use_boost: bool = False):
     #  .env 진행 중,  config 
     if not llm_model:
         llm_model = config.get("llm_model", "gpt-4o-mini")
+
+    print(
+        f"{config_label} provider={provider}, model={llm_model}, "
+        f"base_url={llm_base_url[:40] if llm_base_url else ''}..."
+    )
+    return create_camel_model_backend(
+        provider=provider,
+        model_name=llm_model,
+        api_key=llm_api_key or None,
+        base_url=llm_base_url or None,
+    )
     
     #  camel-ai 
     if llm_api_key:
