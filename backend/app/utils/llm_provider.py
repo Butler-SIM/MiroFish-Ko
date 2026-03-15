@@ -146,6 +146,7 @@ class CodexCLIClient:
         self.executable = resolved_executable
         self.model_name = model_name or Config.LLM_MODEL_NAME
         self.sandbox = sandbox or Config.LLM_CODEX_SANDBOX
+        self.reasoning_effort = Config.LLM_CODEX_REASONING_EFFORT
         self.working_dir = Path(working_dir or Config.LLM_CODEX_WORKDIR or PROJECT_ROOT)
         self.timeout_seconds = timeout_seconds or Config.LLM_CODEX_TIMEOUT_SECONDS
 
@@ -252,6 +253,11 @@ class CodexCLIClient:
             ]
             if self.model_name:
                 command[2:2] = ["-m", self.model_name]
+            if self.reasoning_effort:
+                command[2:2] = [
+                    "-c",
+                    f'model_reasoning_effort="{self.reasoning_effort}"',
+                ]
 
             env = os.environ.copy()
             env.setdefault("NO_COLOR", "1")
