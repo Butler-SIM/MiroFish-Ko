@@ -25,10 +25,10 @@ class Config:
     LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "openai_compatible").strip().lower()
     LLM_API_KEY = os.environ.get("LLM_API_KEY")
     LLM_BASE_URL = os.environ.get("LLM_BASE_URL", "https://api.openai.com/v1")
-    LLM_MODEL_NAME = os.environ.get("LLM_MODEL_NAME", "gpt-4o-mini")
+    LLM_MODEL_NAME = os.environ.get("LLM_MODEL_NAME", "gpt-5.4-mini")
     LLM_CODEX_EXECUTABLE = os.environ.get("LLM_CODEX_EXECUTABLE", "codex")
     LLM_CODEX_SANDBOX = os.environ.get("LLM_CODEX_SANDBOX", "read-only")
-    LLM_CODEX_REASONING_EFFORT = os.environ.get("LLM_CODEX_REASONING_EFFORT", "").strip().lower()
+    LLM_CODEX_REASONING_EFFORT = os.environ.get("LLM_CODEX_REASONING_EFFORT", "medium").strip().lower()
     LLM_CODEX_WORKDIR = os.environ.get(
         "LLM_CODEX_WORKDIR",
         os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")),
